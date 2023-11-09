@@ -5,22 +5,22 @@ variables:
   HOST: 127.0.0.1
   PORT: 3000
 
-matrix:
-  - TEST_SCRIPT:
-      - nagios-examples/test_ram_check.py
-    TEST_RESULT:
-      - 100%
-  - TEST_SCRIPT:
-      - nagios-examples/test_ram_check_85.py
-    TEST_RESULT:
-      - 25%
-  - TEST_SCRIPT:
-      - nagios-examples/test_ram_check_critical.py
-    TEST_RESULT:
-      - 0%
-
-default:
+test:
   stage: test
+  parallel:
+    matrix:
+      - TEST_SCRIPT:
+          - nagios-examples/test_ram_check.py
+        TEST_RESULT:
+          - 100%
+      - TEST_SCRIPT:
+          - nagios-examples/test_ram_check_85.py
+        TEST_RESULT:
+          - 25%
+      - TEST_SCRIPT:
+          - nagios-examples/test_ram_check_critical.py
+        TEST_RESULT:
+          - 0%
   script:
     - python agent.py -host $HOST -p $PORT $TEST_SCRIPT $
     - sleep 5  # wait for server to boot up
