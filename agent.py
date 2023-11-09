@@ -48,14 +48,20 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
         # weight is how good the service currently is, everything up to 70% ram usage is still valid
         # ram warnings usually start at 80%
         weight = 100
-        degrading_treshhold = 30  # start degrading service at last 30% ram
+        degrading_treshhold = 30  # start degrading service at the last 30% free ram
+
+        # directly half the weight at 70%, because the traffic
+        # balancing is proportional to weights of other instances
+        degraded_weight = 50
         fully_degraded_treshold = 5  # set weight to 0 at threshold
 
+        # only 5% ram left, set the weight to 0, other instances should handle
         if ram_percentage < fully_degraded_treshold:
             weight = 0
+        # proportional weight degrading, starting at degraded_weight
         elif ram_percentage < degrading_treshhold:
             # linear descent, 15% ram left would make weight to 50%
-            weight = (weight * ram_percentage) // degrading_treshhold
+            weight = (degraded_weight * ram_percentage) // degrading_treshhold
 
         self.request.sendall(f"{weight}%")
 
