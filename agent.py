@@ -44,6 +44,8 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
         # message parsing
         text_chunks = message.split()
         ram_percentage = text_chunks[2][:-1]  # third chunk, remove '%' text
+        print(ram_percentage)
+        ram_percentage = int(ram_percentage)
 
         # weight is how good the service currently is, everything up to 70% ram usage is still valid
         # ram warnings usually start at 80%
@@ -63,7 +65,8 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
             # linear descent, 15% ram left would make weight to 50%
             weight = (degraded_weight * ram_percentage) // degrading_treshhold
 
-        self.request.sendall(f"{weight}%")
+        haproxy_answer = f"{weight}%\n"
+        self.request.sendall(str.encode(haproxy_answer, encoding="utf-8"))
 
 
 def main(host, port, check_ram_path):
