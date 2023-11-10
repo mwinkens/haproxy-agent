@@ -23,7 +23,7 @@ test:
         TEST_RESULT:
           - 0%
   script:
-    - python agent.py -host $HOST -p $PORT $TEST_SCRIPT $
+    - python agent.py -host $HOST -p $PORT $TEST_SCRIPT &
     - sleep 5  # wait for server to boot up
     - python tests/test_client.py > result.out
     - cat result.out == $TEST_RESULT
