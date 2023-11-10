@@ -7,7 +7,7 @@ import importlib.util
 import logging
 
 logger = logging.getLogger("haproxy-agent")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.WARNING)
 
 formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
 
@@ -16,7 +16,7 @@ fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)
 
 ch = logging.StreamHandler()
-ch.setLevel(logging.DEBUG)
+ch.setLevel(logging.WARNING)
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 logger.addHandler(fh)
