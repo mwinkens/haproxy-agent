@@ -6,6 +6,7 @@ variables:
   PORT: 3000
 
 test:
+  image: python:3.9-alpine
   stage: test
   parallel:
     matrix:
