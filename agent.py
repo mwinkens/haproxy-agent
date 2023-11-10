@@ -6,7 +6,21 @@ from pathlib import Path
 import importlib.util
 import logging
 
-logging.basicConfig(filename="haproxy-nagios-agent.log", filemode='w', level=logging.DEBUG)
+logger = logging.getLogger("haproxy-agent")
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
+
+fh = logging.FileHandler('haproxy-nagios-agent.log')
+fh.setLevel(logging.DEBUG)
+fh.setFormatter(formatter)
+
+ch = logging.StreamHandler()
+ch.setLevel(logging.DEBUG)
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+logger.addHandler(fh)
+
 ram_check_module_name = "check_ram"
 
 
@@ -41,7 +55,7 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
         # message parsing
         text_chunks = message.split()
         ram_percentage = text_chunks[2][:-1]  # third chunk, remove '%' text
-        logging.debug(f"{ram_percentage}% ram left")
+        logger.debug(f"{ram_percentage}% ram left")
         ram_percentage = int(ram_percentage)
 
         # weight is how good the service currently is, everything up to 70% ram usage is still valid
@@ -63,7 +77,7 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
             weight = (degraded_weight * ram_percentage) // degrading_threshold
 
         haproxy_answer = f"{weight}%\n"
-        logging.info(f"Reducing haproxy weight to {weight}%")
+        logger.info(f"Set haproxy weight to {weight}%")
         self.request.sendall(str.encode(haproxy_answer, encoding="utf-8"))
 
 
@@ -71,14 +85,14 @@ def main(host, port, check_ram_path):
     # check that the nagios ram check exists
     ram_check = Path(check_ram_path)
     if not ram_check.is_file():
-        logging.warning(f"{ram_check.absolute()} does not exist or is not a file, using build in ram check!")
+        logger.warning(f"{ram_check.absolute()} does not exist or is not a file, using build in ram check!")
         ram_check = Path("check_ram_copy.py")
 
     # import the ram check module from nagios
     import_ramcheck_module(ram_check)
 
     # Create the server, binding to localhost on the port
-    logging.info(f"Starting TCP server on {host}:{port}")
+    logger.info(f"Starting TCP server on {host}:{port}")
     with socketserver.TCPServer((host, port), TCPHaproxyHandler, bind_and_activate=False) as server:
         server.allow_reuse_address = True
         server.server_bind()
