@@ -4,7 +4,9 @@ import argparse
 import sys
 from pathlib import Path
 import importlib.util
+import logging
 
+logging.basicConfig(filename="haproxy-nagios-agent.log", filemode='w', level=logging.DEBUG)
 ram_check_module_name = "check_ram"
 
 
@@ -32,8 +34,8 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
     def handle(self):
         # self.request is the TCP socket connected to the client
         self.data = self.request.recv(1024).strip()
-        print("{} wrote:".format(self.client_address[0]))
-        print(self.data)
+        logging.debug("{} wrote:".format(self.client_address[0]))
+        logging.debug(self.data)
 
         # get ram state
         check_ram = importlib.import_module(ram_check_module_name)
@@ -44,7 +46,7 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
         # message parsing
         text_chunks = message.split()
         ram_percentage = text_chunks[2][:-1]  # third chunk, remove '%' text
-        print(ram_percentage)
+        logging.debug(f"{ram_percentage}% ram left")
         ram_percentage = int(ram_percentage)
 
         # weight is how good the service currently is, everything up to 70% ram usage is still valid
@@ -66,6 +68,7 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
             weight = (degraded_weight * ram_percentage) // degrading_treshhold
 
         haproxy_answer = f"{weight}%\n"
+        logging.info(f"Reducing haproxy weight to {weight}%")
         self.request.sendall(str.encode(haproxy_answer, encoding="utf-8"))
 
 
@@ -73,14 +76,14 @@ def main(host, port, check_ram_path):
     # check that the nagios ram check exists
     ram_check = Path(check_ram_path)
     if not ram_check.is_file():
-        print(f"{ram_check.absolute()} does not exist or is not a file!")
-        sys.exit(1)
+        logging.warning(f"{ram_check.absolute()} does not exist or is not a file, using build in ram check!")
+        ram_check = Path("check_ram_copy.py")
 
     # import the ram check module from nagios
     import_ramcheck_module(ram_check)
 
     # Create the server, binding to localhost on the port
-    print(host, port)
+    logging.info(f"Starting TCP server on {host}:{port}")
     with socketserver.TCPServer((host, port), TCPHaproxyHandler) as server:
         # Activate the server; this will keep running until you
         # interrupt the program with Ctrl-C
