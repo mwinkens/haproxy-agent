@@ -32,11 +32,6 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
     """
 
     def handle(self):
-        # self.request is the TCP socket connected to the client
-        self.data = self.request.recv(1024).strip()
-        logging.debug("{} wrote:".format(self.client_address[0]))
-        logging.debug(self.data)
-
         # get ram state
         check_ram = importlib.import_module(ram_check_module_name)
         message, state = check_ram.check_ram(warning_threshold=20, critical_threshold=10, percent=True, verbosity=False,
@@ -84,7 +79,10 @@ def main(host, port, check_ram_path):
 
     # Create the server, binding to localhost on the port
     logging.info(f"Starting TCP server on {host}:{port}")
-    with socketserver.TCPServer((host, port), TCPHaproxyHandler) as server:
+    with socketserver.TCPServer((host, port), TCPHaproxyHandler, bind_and_activate=False) as server:
+        server.allow_reuse_address = True
+        server.server_bind()
+        server.server_activate()
         # Activate the server; this will keep running until you
         # interrupt the program with Ctrl-C
         server.serve_forever()
