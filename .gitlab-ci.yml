@@ -26,4 +26,4 @@ test:
     - python agent.py -host $HOST -p $PORT $TEST_SCRIPT &
     - sleep 5  # wait for server to boot up
     - python tests/test_client.py > result.out
-    - cat result.out == $TEST_RESULT
+    - if [ "$(cat result.out)" = "$TEST_RESULT" ]; then exit 0; else exit 1"; fi
