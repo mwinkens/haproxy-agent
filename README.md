@@ -28,7 +28,7 @@ Additional Notes:
 
 If you want to install this repository at another place, you have to change the symlink and the `haproxy-nagios-agent.service` file!
 
-Also, this agent starts with some default values defined in `start.sh`.
+Also, this agent starts with some default values defined in `start.sh`. The host defaults to `0.0.0.0`!
 
 ## Configure HAproxy
 
