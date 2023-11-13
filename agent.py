@@ -32,7 +32,7 @@ def import_ramcheck_module(file_path: Path):
     :param file_path:
     :return:
     """
-    spec = importlib.util.spec_from_file_location(ram_check_module_name, SourceFileLoader(ram_check_module_name, file_path.absolute()))
+    spec = importlib.util.spec_from_loader(ram_check_module_name, SourceFileLoader(ram_check_module_name, file_path.absolute()))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     sys.modules[ram_check_module_name] = module
