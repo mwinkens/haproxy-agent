@@ -5,6 +5,7 @@ import sys
 from pathlib import Path
 import importlib.util
 import logging
+from importlib.machinery import SourceFileLoader
 
 logger = logging.getLogger("haproxy-agent")
 logger.setLevel(logging.WARNING)
@@ -22,6 +23,7 @@ logger.addHandler(ch)
 logger.addHandler(fh)
 
 ram_check_module_name = "check_ram"
+ram_check_copy_path = "check_ram_copy.py"
 
 
 def import_ramcheck_module(file_path: Path):
@@ -30,7 +32,7 @@ def import_ramcheck_module(file_path: Path):
     :param file_path:
     :return:
     """
-    spec = importlib.util.spec_from_file_location(ram_check_module_name, file_path.absolute())
+    spec = importlib.util.spec_from_file_location(ram_check_module_name, SourceFileLoader(ram_check_module_name, file_path.absolute()))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     sys.modules[ram_check_module_name] = module
@@ -86,7 +88,7 @@ def main(host, port, check_ram_path):
     ram_check = Path(check_ram_path)
     if not ram_check.is_file():
         logger.warning(f"{ram_check.absolute()} does not exist or is not a file, using build in ram check!")
-        ram_check = Path("check_ram_copy.py")
+        ram_check = Path(ram_check_copy_path)
 
     # import the ram check module from nagios
     import_ramcheck_module(ram_check)
