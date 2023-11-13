@@ -32,7 +32,10 @@ def import_ramcheck_module(file_path: Path):
     :param file_path:
     :return:
     """
-    spec = importlib.util.spec_from_loader(ram_check_module_name, SourceFileLoader(ram_check_module_name, file_path.absolute()))
+    sfl = SourceFileLoader(ram_check_module_name, str(file_path.absolute()))
+    spec = importlib.util.spec_from_loader(ram_check_module_name, sfl)
+    if spec is None:
+        raise ValueError("Could not load module from path")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     sys.modules[ram_check_module_name] = module
@@ -91,7 +94,12 @@ def main(host, port, check_ram_path):
         ram_check = Path(ram_check_copy_path)
 
     # import the ram check module from nagios
-    import_ramcheck_module(ram_check)
+    try:
+        import_ramcheck_module(ram_check)
+    except ValueError:
+        logger.warning(f"Could not load {ram_check}!")
+        ram_check = Path(ram_check_copy_path)
+        import_ramcheck_module(ram_check)
 
     # Create the server, binding to localhost on the port
     logger.info(f"Starting TCP server on {host}:{port}")
