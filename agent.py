@@ -86,7 +86,7 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
         # directly half the weight at 50%, because the traffic
         # balancing is proportional to weights of other instances
         degraded_weight = 50
-        fully_degraded_threshold = 95  # set weight to 0 at threshold, drain instance
+        fully_degraded_threshold = 100  # set weight to 0 at threshold, drain instance
 
         # only 5% load left, set the weight to 0, other instances should handle
         if load_int_1 > fully_degraded_threshold:
