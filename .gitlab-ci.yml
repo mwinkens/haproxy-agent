@@ -11,19 +11,36 @@ test:
   parallel:
     matrix:
       - TEST_SCRIPT:
-          - nagios-examples/test_ram_check.py
+          - integrationtests/test_ram_check
         TEST_RESULT:
           - 100%
       - TEST_SCRIPT:
-          - nagios-examples/test_ram_check_85.py
+          - integrationtests/test_ram_check_85
         TEST_RESULT:
           - 25%
       - TEST_SCRIPT:
-          - nagios-examples/test_ram_check_critical.py
+          - integrationtests/test_ram_check_critical
         TEST_RESULT:
           - 0%
+      - TEST_SCRIPT:
+          - integrationtests/test_load_check_critical
+        TEST_RESULT:
+          - 0%
+      - TEST_SCRIPT:
+          - integrationtests/test_load_check
+        TEST_RESULT:
+          - 100%
+      - TEST_SCRIPT:
+          - integrationtests/test_load_check_75
+        TEST_RESULT:
+          - 25%
+      - TEST_SCRIPT:
+          - integrationtests/test_build_in_checks
+        TEST_RESULT:
+          - 100%
   script:
     - python agent.py -host $HOST -p $PORT $TEST_SCRIPT &
     - sleep 5  # wait for server to boot up
     - python tests/test_client.py > result.out
+    - cat result.out
     - if [ "$(cat result.out)" = "$TEST_RESULT" ]; then exit 0; else exit 1; fi

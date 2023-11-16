@@ -1,0 +1,2 @@
+#!/bin/sh
+echo "OK - load average: 0.00, 0.00, 0.00|load1=0.00; some_other_output"
