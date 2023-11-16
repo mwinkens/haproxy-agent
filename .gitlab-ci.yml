@@ -25,7 +25,7 @@ test:
       - TEST_SCRIPT:
           - integrationtests/test_load_check_critical
         TEST_RESULT:
-          - 0%
+          - 1%
       - TEST_SCRIPT:
           - integrationtests/test_load_check
         TEST_RESULT:
