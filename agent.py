@@ -7,6 +7,7 @@ import importlib.util
 import logging
 from importlib.machinery import SourceFileLoader
 import subprocess
+import configparser
 
 logger = logging.getLogger("haproxy-agent")
 logger.setLevel(logging.WARNING)
@@ -53,8 +54,57 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
     client.
     """
 
-    def __init__(self, request, client_address, server, load_check: Path):
+    def __init__(self, request, client_address, server, load_check: Path, config):
         self.load_check = load_check
+        self.conf_load = config['check.load']
+        self.conf_ram = config['check.ram']
+        self.conf_general = config['check.general']
+
+        # LOAD
+        # only use last 1 min for now
+        self.load_weight = int(self.conf_load.get('weight', 100))
+
+        self.load_min_weight = int(self.conf_load.get('min_weight', 0))
+
+        # max weight, but can be more, the cpu can be overloaded
+        self.load_max_weight = int(self.conf_load.get('max_weight', 100))
+
+        # start degrading at 50 percent load
+        self.load_degrading_threshold = int(self.conf_load.get('degrading_threshold', 50))
+
+        # directly half the weight at 50%, because the traffic
+        # balancing is proportional to weights of other instances
+        self.load_degraded_weight = int(self.conf_load.get('degraded_weight', 50))
+
+        # high load, but don't set weight to 0 yet
+        self.load_high_load_degraded_threshold = int(self.conf_load.get('high_load_degraded_threshold', 90))
+
+        # weight at high load, e.g. 90
+        self.load_high_load_degraded_weight = int(self.conf_load.get('high_load_degraded_weight', 20))
+
+        # set weight to 0 at threshold, drain instance
+        self.load_fully_degraded_threshold = int(self.conf_load.get('fully_degraded_threshold', 110))
+
+        # RAM
+        # weight is how good the service currently is, everything up to 70% ram usage is still valid
+        # ram warnings usually start at 80%
+        self.ram_weight = int(self.conf_ram.get('weight', 100))
+
+        self.ram_min_weight = int(self.conf_ram.get('min_weight', 0))
+
+        # start degrading service at the last 30% free ram
+        self.ram_degrading_threshold = int(self.conf_ram.get('degrading_threshold', 30))
+
+        # directly half the weight at 70%, because the traffic
+        # balancing is proportional to weights of other instances
+        self.ram_degraded_weight = int(self.conf_ram.get('degraded_weight', 50))
+
+        # set weight to 0 at threshold
+        self.ram_fully_degraded_threshold = int(self.conf_ram.get('fully_degraded_threshold', 5))
+
+        # GENERAL
+        self.general_max_weight = int(self.conf_general.get('max_weight', 100))
+        self.general_min_weight = int(self.conf_general.get('min_weight', 0))
         super().__init__(request, client_address, server)
 
     def handle_load(self) -> int:
@@ -79,32 +129,21 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
 
         logger.debug(f"load_1 {load_int_1}%, load_5 {load_int_5}%, load_15 {load_int_15}%")
 
-        # only use last 1 min for now
-        weight = 100
-        max_weight = 100  # max weight, but can be more, the cpu can be overloaded
-        degrading_threshold = 50  # start degrading at 50 percent load
-        # directly half the weight at 50%, because the traffic
-        # balancing is proportional to weights of other instances
-        degraded_weight = 50
-        high_load_degraded_threshold = 90 # high load, but don't set weight to 0 yet
-        high_load_degraded_weight = 20  # weight at high load, e.g. 90
-        fully_degraded_threshold = 110 # set weight to 0 at threshold, drain instance
-
-
-
+        weight = self.load_weight
         # only 5% load left, set the weight to 0, other instances should handle
-        if load_int_1 > fully_degraded_threshold:
+        if load_int_1 > self.load_fully_degraded_threshold:
             weight = 0
-        elif load_int_1 > high_load_degraded_threshold:
-            load_left = fully_degraded_threshold - load_int_1
-            weight = (high_load_degraded_weight * load_left) // (fully_degraded_threshold - high_load_degraded_threshold)
+        elif load_int_1 > self.load_high_load_degraded_threshold:
+            load_left = self.load_fully_degraded_threshold - load_int_1
+            weight = (self.load_high_load_degraded_weight * load_left) // (
+                    self.load_fully_degraded_threshold - self.load_high_load_degraded_threshold)
         # proportional weight degrading, starting at degraded_weight
-        elif load_int_1 > degrading_threshold:
+        elif load_int_1 > self.load_degrading_threshold:
             # linear descent, 25% load capacity left would make weight to 25
-            load_left = max_weight - load_int_1
-            weight = (degraded_weight * load_left) // (max_weight - degrading_threshold)
+            load_left = self.load_max_weight - load_int_1
+            weight = (self.load_degraded_weight * load_left) // (self.load_max_weight - self.load_degrading_threshold)
 
-        return max(weight, 0)  # make sure we don't have negative weight
+        return max(weight, self.load_min_weight)  # make sure we don't have negative weight
 
     def handle_ram(self) -> int:
         # get ram state
@@ -119,38 +158,38 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
         logger.debug(f"{ram_percentage}% ram left")
         ram_percentage = int(ram_percentage)
 
-        # weight is how good the service currently is, everything up to 70% ram usage is still valid
-        # ram warnings usually start at 80%
-        weight = 100
-        degrading_threshold = 30  # start degrading service at the last 30% free ram
-
-        # directly half the weight at 70%, because the traffic
-        # balancing is proportional to weights of other instances
-        degraded_weight = 50
-        fully_degraded_threshold = 5  # set weight to 0 at threshold
+        weight = self.ram_weight
 
         # only 5% ram left, set the weight to 0, other instances should handle
-        if ram_percentage < fully_degraded_threshold:
+        if ram_percentage < self.ram_fully_degraded_threshold:
             weight = 0
         # proportional weight degrading, starting at degraded_weight
-        elif ram_percentage < degrading_threshold:
+        elif ram_percentage < self.ram_degrading_threshold:
             # linear descent, 15% ram left would make weight to 50%
-            weight = (degraded_weight * ram_percentage) // degrading_threshold
+            weight = (self.ram_degraded_weight * ram_percentage) // self.ram_degrading_threshold
 
-        return weight
+        return max(weight, self.ram_min_weight)
 
     def handle(self):
         weight_load = self.handle_load()
         weight_ram = self.handle_ram()
         logger.debug(f"weight load: {weight_load}\nweight ram: {weight_ram}")
-        weight = min(weight_ram, weight_load, 100)
+        weight = max(min(weight_ram, weight_load, self.general_max_weight), self.general_min_weight)
 
         haproxy_answer = f"{weight}%\n"
         logger.info(f"Set haproxy weight to {weight}%")
         self.request.sendall(str.encode(haproxy_answer, encoding="utf-8"))
 
 
-def main(host, port, nagios_plugin_path):
+def main(host, port, nagios_plugin_path, config_path):
+    # check config is there and can be loaded
+    if not Path(config_path).is_file():
+        logger.critical(f"Config {config_path} does not exist or is not a file")
+        sys.exit(1)
+    config = configparser.ConfigParser()
+    config.read(config_path)
+
+    # check nagios directory exists
     nagios_plugin_path = Path(nagios_plugin_path)
     if not nagios_plugin_path.is_dir():
         logger.warning(f"{nagios_plugin_path} does not exist or is not a directory, using build in checks!")
@@ -179,7 +218,8 @@ def main(host, port, nagios_plugin_path):
     # Create the server, binding to localhost on the port
     logger.info(f"Starting TCP server on {host}:{port}")
     with socketserver.TCPServer((host, port),
-                                lambda *args, **kwargs: TCPHaproxyHandler(*args, **kwargs, load_check=load_check),
+                                lambda *args, **kwargs: TCPHaproxyHandler(*args, **kwargs, load_check=load_check,
+                                                                          config=config),
                                 bind_and_activate=False) as server:
         server.allow_reuse_address = True
         server.server_bind()
@@ -195,6 +235,7 @@ if __name__ == "__main__":
                                      epilog="I can't believe somebody is reading this")
     parser.add_argument('-host', '--hostname', required=False, default="127.0.0.1")
     parser.add_argument('-p', '--port', type=int, required=False, default=3000)
+    parser.add_argument('-c', '--config', required=False, default="haproxy-agent.ini")
     parser.add_argument('nagios_path')
     args = parser.parse_args()
-    main(args.hostname, args.port, args.nagios_path)
+    main(args.hostname, args.port, args.nagios_path, args.config)
