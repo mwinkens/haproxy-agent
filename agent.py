@@ -81,16 +81,23 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
 
         # only use last 1 min for now
         weight = 100
-        max_weight = 100
+        max_weight = 100  # max weight, but can be more, the cpu can be overloaded
         degrading_threshold = 50  # start degrading at 50 percent load
         # directly half the weight at 50%, because the traffic
         # balancing is proportional to weights of other instances
         degraded_weight = 50
-        fully_degraded_threshold = 100  # set weight to 0 at threshold, drain instance
+        high_load_degraded_threshold = 90 # high load, but don't set weight to 0 yet
+        high_load_degraded_weight = 20  # weight at high load, e.g. 90
+        fully_degraded_threshold = 110 # set weight to 0 at threshold, drain instance
+
+
 
         # only 5% load left, set the weight to 0, other instances should handle
         if load_int_1 > fully_degraded_threshold:
             weight = 0
+        elif load_int_1 > high_load_degraded_threshold:
+            load_left = fully_degraded_threshold - load_int_1
+            weight = (high_load_degraded_weight * load_left) // (fully_degraded_threshold - high_load_degraded_threshold)
         # proportional weight degrading, starting at degraded_weight
         elif load_int_1 > degrading_threshold:
             # linear descent, 25% load capacity left would make weight to 25

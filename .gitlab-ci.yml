@@ -35,6 +35,10 @@ test:
         TEST_RESULT:
           - 25%
       - TEST_SCRIPT:
+          - integrationtests/test_load_check_100
+        TEST_RESULT:
+          - 10%
+      - TEST_SCRIPT:
           - integrationtests/test_build_in_checks
         TEST_RESULT:
           - 100%
