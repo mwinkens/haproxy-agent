@@ -3,6 +3,7 @@
 Simple agent for haproxy to gradually degrade a service if it's ram is reaching its limits
 
 ## Getting started
+
 You can start this agent simply by calling
 
 ```commandline
@@ -16,17 +17,21 @@ The path of the nagios ram check is usually given by puppet and may be different
 This agent can be run as a daemon:
 
 For Ubuntu:
+
 - Clone this repository to `/opt/`
 - link the service file
+
 ```commandline
 ln -s /opt/haproxy-nagios-agent/haproxy-nagios-agent.service /etc/systemd/system/haproxy-agent.service
 ```
+
 - reload the daemons with `systemctl daemon-reload`
 - start the agent with `systemctl start haproxy-agent`
 
 Additional Notes:
 
-If you want to install this repository at another place, you have to change the symlink and the `haproxy-nagios-agent.service` file!
+If you want to install this repository at another place, you have to change the symlink and
+the `haproxy-nagios-agent.service` file!
 
 Also, this agent starts with some default values defined in `start.sh`. The host defaults to `0.0.0.0`!
 
@@ -34,6 +39,7 @@ Also, this agent starts with some default values defined in `start.sh`. The host
 
 According to this [guide](https://www.haproxy.com/blog/how-to-enable-health-checks-in-haproxy#agent-health-checks)
 you can simply add the agent-check configurations for haproxy:
+
 ```
 backend webservers
   balance roundrobin
@@ -42,13 +48,15 @@ backend webservers
 
 Note, that the agent-addr is the same as the servers address, as it runs on the server, but the agent port differs!
 
-Find more on the server configuration [in the official documentation](https://www.haproxy.com/documentation/aloha/latest/load-balancing/health-checks/agent-checks/#configure-the-servers)
+Find more on the server
+configuration [in the official documentation](https://www.haproxy.com/documentation/aloha/latest/load-balancing/health-checks/agent-checks/#configure-the-servers)
 
 ## Configure HAproxy-Agent
 
-The haproxy-agent comes with a variety of configuration options. These are all defined in `haproxy-agent.ini`. 
+The haproxy-agent comes with a variety of configuration options. These are all defined in `haproxy-agent.ini`.
 
 ### Start options
+
 The programm itself has just a few start options, where every argument except of the nagios path are optional:
 
 ```
@@ -58,27 +66,28 @@ python3 agent.py -host 0.0.0.0 -p 3000 -c haproxy-agent.ini /lib/nagios/plugins
 Note: The arguments directly given to the agent overwrite the haproxy-agent.ini file configuration!
 
 ### Variables
+
 Description of the variables in the haproxy-agent.ini file:
 
-| section | variable | default | description |
-| ------- | -------- | ------- | ----------- |
-| server  | host     | 0.0.0.0 | Binding host of the agent |
-|         | port     | 3000    | Binding port of the agent |
-| check.general | max_weight | 100 | Maximum weight the agent sends to the haproxy. This setting clips every other maximum weight! |
-|               | min_weight | 0 | Minimum weight the agent sends to the haproxy. This setting clips every other minimum weight! Set to 1 if you don't want to go into the drain state of haproxy ever! |
-| check.load | weight | 100 | Start weight of the load check for calculations |
-| | min_weight | 1 | Minimum weight the load check can return. The default is set to 1, so high loads don't cause every server to drain |
-| | max_weight | 100 | Maximum weight the load check can return
-| | degrading_threshold | 50 | Load percentage, at which stage 1 weight loss starts |
-| | degraded_weight | 50 | Start weight of stage 1 weight loss
-| | high_load_degraded_threshold | 90 | Load percentage, at which stage 2 weight loss starts |
-| | high_load_degraded_weight | 20 | Start weight of stage2 weight loss |
-| | fully_degraded_threshold | 110 | Load percentage at which the weight is 0. Please note, that check.general/min_weight and check.load/min_weight can clip the weight, so weight 0 might not be returned!
-| check.ram | weight | 100 | Start weight of the ram check for calculations |
-| | min_weight | 0 | Minimum weight the ram check can return. The default is set to 0, so high ram usage can cause servers to drain |
-| | degrading_threshold | 30 | Start degrading at 30% **free ram** left |
-| | degraded_weight | 50 | Start weight of ram weight loss |
-| | fully_degraded_threshold | 5 | **Free ram** percentage at which the weight is 0. Please note, that check.general/min_weight and check.ram/min_weight can clip the weight, so weight 0 might not be returned! |
+| section       | variable                     | default | description                                                                                                                                                                   |
+|---------------|------------------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| server        | host                         | 0.0.0.0 | Binding host of the agent                                                                                                                                                     |
+|               | port                         | 3000    | Binding port of the agent                                                                                                                                                     |
+| check.general | max_weight                   | 100     | Maximum weight the agent sends to the haproxy. This setting clips every other maximum weight!                                                                                 |
+|               | min_weight                   | 0       | Minimum weight the agent sends to the haproxy. This setting clips every other minimum weight! Set to 1 if you don't want to go into the drain state of haproxy ever!          |
+| check.load    | weight                       | 100     | Start weight of the load check for calculations                                                                                                                               |
+|               | min_weight                   | 1       | Minimum weight the load check can return. The default is set to 1, so high loads don't cause every server to drain                                                            |
+|               | max_weight                   | 100     | Maximum weight the load check can return                                                                                                                                      |
+|               | degrading_threshold          | 50      | Load percentage, at which stage 1 weight loss starts                                                                                                                          |
+|               | degraded_weight              | 50      | Start weight of stage 1 weight loss                                                                                                                                           |
+|               | high_load_degraded_threshold | 90      | Load percentage, at which stage 2 weight loss starts                                                                                                                          |
+|               | high_load_degraded_weight    | 20      | Start weight of stage2 weight loss                                                                                                                                            |
+|               | fully_degraded_threshold     | 110     | Load percentage at which the weight is 0. Please note, that check.general/min_weight and check.load/min_weight can clip the weight, so weight 0 might not be returned!        |
+| check.ram     | weight                       | 100     | Start weight of the ram check for calculations                                                                                                                                |
+|               | min_weight                   | 0       | Minimum weight the ram check can return. The default is set to 0, so high ram usage can cause servers to drain                                                                |
+|               | degrading_threshold          | 30      | Start degrading at 30% **free ram** left                                                                                                                                      |
+|               | degraded_weight              | 50      | Start weight of ram weight loss                                                                                                                                               |
+|               | fully_degraded_threshold     | 5       | **Free ram** percentage at which the weight is 0. Please note, that check.general/min_weight and check.ram/min_weight can clip the weight, so weight 0 might not be returned! |
 
 ## Additional notes
 
