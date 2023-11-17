@@ -182,12 +182,20 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
 
 
 def main(host, port, nagios_plugin_path, config_path):
+
     # check config is there and can be loaded
     if not Path(config_path).is_file():
         logger.critical(f"Config {config_path} does not exist or is not a file")
         sys.exit(1)
     config = configparser.ConfigParser()
     config.read(config_path)
+    conf_server = config['server']
+
+    # check host and port
+    if host == "":
+        host = conf_server.get('host', '0.0.0.0')
+    if port == 0:  # don't use port 0, like ever!
+        port = int(conf_server.get('port', '3000'))
 
     # check nagios directory exists
     nagios_plugin_path = Path(nagios_plugin_path)
@@ -233,8 +241,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(prog='health-agent',
                                      description='health check agent for haproxy using nagios ramcheck',
                                      epilog="I can't believe somebody is reading this")
-    parser.add_argument('-host', '--hostname', required=False, default="127.0.0.1")
-    parser.add_argument('-p', '--port', type=int, required=False, default=3000)
+    parser.add_argument('-host', '--hostname', required=False, default="")
+    parser.add_argument('-p', '--port', type=int, required=False, default=0)
     parser.add_argument('-c', '--config', required=False, default="haproxy-agent.ini")
     parser.add_argument('nagios_path')
     args = parser.parse_args()
