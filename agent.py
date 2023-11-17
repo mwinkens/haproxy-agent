@@ -77,13 +77,13 @@ class TCPHaproxyHandler(socketserver.BaseRequestHandler):
         self.load_degraded_weight = int(self.conf_load.get('degraded_weight', 50))
 
         # high load, but don't set weight to 0 yet
-        self.load_high_load_degraded_threshold = int(self.conf_load.get('high_load_degraded_threshold', 90))
+        self.load_high_load_degraded_threshold = int(self.conf_load.get('high_load_degraded_threshold', 80))
 
-        # weight at high load, e.g. 90
+        # weight at high load, e.g. 80
         self.load_high_load_degraded_weight = int(self.conf_load.get('high_load_degraded_weight', 20))
 
         # set weight to 0 at threshold, drain instance
-        self.load_fully_degraded_threshold = int(self.conf_load.get('fully_degraded_threshold', 110))
+        self.load_fully_degraded_threshold = int(self.conf_load.get('fully_degraded_threshold', 120))
 
         # RAM
         # weight is how good the service currently is, everything up to 70% ram usage is still valid
