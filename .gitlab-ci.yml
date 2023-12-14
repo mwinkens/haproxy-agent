@@ -49,4 +49,4 @@ test:
     - sleep 5  # wait for server to boot up
     - python tests/test_client.py > result.out
     - cat result.out
-    - if [ "$(cat result.out)" -eq "$TEST_RESULT" ] || [ "$TEST_RESULT" = "any" ] ; then exit 0; else exit 1; fi
+    - if [ "$(cat result.out)" = "$TEST_RESULT" ] || [ "$TEST_RESULT" = "any" ] ; then exit 0; else exit 1; fi
