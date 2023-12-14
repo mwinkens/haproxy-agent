@@ -189,12 +189,12 @@ def main(host, port, check_directory_path, config_path):
         check_directory_path = Path("buildins")
 
     check_modules = [
-        [check_ram_module_name, check_ram_copy_path],
-        [check_load_module_name, check_load_copy_path],
+        [check_ram_module_name, f"{check_ram_module_name}.py", check_ram_copy_path],
+        [check_load_module_name, f"{check_load_module_name}.py", check_load_copy_path],
     ]
-    for module_name, module_path_buildin in check_modules:
+    for module_name, module_filename, module_path_buildin in check_modules:
         # check that the module name exists
-        check_path = check_directory_path.joinpath(module_name)
+        check_path = check_directory_path.joinpath(module_filename)
         if not check_path.is_file():
             logger.warning(f"{check_path.absolute()} does not exist or is not a file, using build in check!")
             check_path = Path(module_path_buildin)
