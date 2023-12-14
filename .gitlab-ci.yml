@@ -8,6 +8,8 @@ variables:
 test:
   image: python:3.9-alpine
   stage: test
+  tags:
+    - public-docker
   parallel:
     matrix:
       - TEST_SCRIPT:
