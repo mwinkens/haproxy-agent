@@ -26,8 +26,8 @@ logger.addHandler(fh)
 
 check_ram_module_name = "check_ram"
 check_load_module_name = "check_load"
-check_ram_copy_path = "check_ram_copy.py"
-check_load_copy_path = "check_load"
+check_ram_copy_path = "buildins/check_ram_copy.py"
+check_load_copy_path = "buildins/check_load"
 
 
 def import_ramcheck_module(file_path: Path):
@@ -201,7 +201,7 @@ def main(host, port, nagios_plugin_path, config_path):
     nagios_plugin_path = Path(nagios_plugin_path)
     if not nagios_plugin_path.is_dir():
         logger.warning(f"{nagios_plugin_path} does not exist or is not a directory, using build in checks!")
-        nagios_plugin_path = Path(".")
+        nagios_plugin_path = Path("buildins")
 
     # check that the nagios ram check exists
     ram_check = nagios_plugin_path.joinpath(check_ram_module_name)
