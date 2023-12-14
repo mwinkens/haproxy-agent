@@ -43,6 +43,7 @@ test:
         TEST_RESULT:
           - 100%
   script:
+    - pip install -r buildins/requirements.txt
     - python agent.py -host $HOST -p $PORT $TEST_SCRIPT &
     - sleep 5  # wait for server to boot up
     - python tests/test_client.py > result.out

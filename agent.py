@@ -196,7 +196,7 @@ def main(host, port, check_directory_path, config_path):
         # check that the module name exists
         check_path = check_directory_path.joinpath(module_name)
         if not check_path.is_file():
-            logger.warning(f"{check_path.absolute()} does not exist or is not a file, using build in ram check!")
+            logger.warning(f"{check_path.absolute()} does not exist or is not a file, using build in check!")
             check_path = Path(module_path_buildin)
 
         # check that the module can be loaded
@@ -205,7 +205,13 @@ def main(host, port, check_directory_path, config_path):
         except ValueError:
             logger.warning(f"Could not load {module_name}!")
             check_path = Path(module_path_buildin)
-            import_module(check_path, module_name)
+            try:
+                import_module(check_path, module_name)
+            except ModuleNotFoundError as me:
+                logger.error(me)
+                logger.error(
+                    f"Could not import buildin check {module_name}, did you forget to install the requirements?")
+                sys.exit(1)
 
     # Create the server, binding to localhost on the port
     logger.info(f"Starting TCP server on {host}:{port}")
