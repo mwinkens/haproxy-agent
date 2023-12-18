@@ -1,9 +1,9 @@
 [Unit]
-Description=Haproxy-Nagios-Agent for ram adjusted weights
+Description=Haproxy-Agent for ram adjusted weights
 [Service]
 User=root
-WorkingDirectory=/opt/haproxy-nagios-agent
-ExecStart=/opt/haproxy-nagios-agent/start.sh
+WorkingDirectory=/opt/haproxy-agent
+ExecStart=/opt/haproxy-agent/start.sh
 Type=simple
 TimeoutStopSec=10
 Restart=on-failure

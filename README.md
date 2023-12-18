@@ -1,4 +1,4 @@
-# Haproxy Nagios Agent
+# Haproxy Agent
 
 Simple agent for haproxy to gradually degrade a service if it's ram is reaching its limits
 
@@ -7,10 +7,8 @@ Simple agent for haproxy to gradually degrade a service if it's ram is reaching 
 You can start this agent simply by calling
 
 ```commandline
-python agent.py -host <your host/localhost> -p <port> /path/to/nagiosramcheck.py
+python agent.py -host <your host/localhost> -p <port> /path/to/moduledir
 ```
-
-The path of the nagios ram check is usually given by puppet and may be different for different os
 
 ## Daemon installation
 
@@ -22,7 +20,7 @@ For Ubuntu:
 - link the service file
 
 ```commandline
-ln -s /opt/haproxy-nagios-agent/haproxy-nagios-agent.service /etc/systemd/system/haproxy-agent.service
+ln -s /opt/haproxy-agent/haproxy-agent.service /etc/systemd/system/haproxy-agent.service
 ```
 
 - reload the daemons with `systemctl daemon-reload`
@@ -31,7 +29,7 @@ ln -s /opt/haproxy-nagios-agent/haproxy-nagios-agent.service /etc/systemd/system
 Additional Notes:
 
 If you want to install this repository at another place, you have to change the symlink and
-the `haproxy-nagios-agent.service` file!
+the `haproxy-agent.service` file!
 
 Also, this agent starts with some default values defined in `start.sh`. The host defaults to `0.0.0.0`!
 
@@ -57,10 +55,11 @@ The haproxy-agent comes with a variety of configuration options. These are all d
 
 ### Start options
 
-The programm itself has just a few start options, where every argument except of the nagios path are optional:
+The program itself has just a few start options, where every argument except of the module path are optional.
+The agent comes with its own buildin modules, do you can use `buildins` for this.
 
 ```
-python3 agent.py -host 0.0.0.0 -p 3000 -c haproxy-agent.ini /lib/nagios/plugins
+python3 agent.py -host 0.0.0.0 -p 3000 -c haproxy-agent.ini buildins
 ```
 
 Note: The arguments directly given to the agent overwrite the haproxy-agent.ini file configuration!
@@ -89,9 +88,9 @@ Description of the variables in the haproxy-agent.ini file:
 |               | degraded_weight              | 50      | Start weight of ram weight loss                                                                                                                                               |
 |               | fully_degraded_threshold     | 5       | **Free ram** percentage at which the weight is 0. Please note, that check.general/min_weight and check.ram/min_weight can clip the weight, so weight 0 might not be returned! |
 
-## Additional notes
+## License
 
-inspired by [haproxy-agent-check-example](https://github.com/haproxytechblog/haproxy-agent-check-example)
+See license file
 
 ## Author
 

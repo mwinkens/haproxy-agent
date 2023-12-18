@@ -13,7 +13,7 @@ logger.setLevel(logging.WARNING)
 
 formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s: %(message)s')
 
-fh = logging.FileHandler('haproxy-nagios-agent.log')
+fh = logging.FileHandler('haproxy-agent.log')
 fh.setLevel(logging.DEBUG)
 fh.setFormatter(formatter)
 
@@ -235,6 +235,6 @@ if __name__ == "__main__":
     parser.add_argument('-host', '--hostname', required=False, default="")
     parser.add_argument('-p', '--port', type=int, required=False, default=0)
     parser.add_argument('-c', '--config', required=False, default="haproxy-agent.ini")
-    parser.add_argument('nagios_path')
+    parser.add_argument('module_path')
     args = parser.parse_args()
-    main(args.hostname, args.port, args.nagios_path, args.config)
+    main(args.hostname, args.port, args.module_path, args.config)

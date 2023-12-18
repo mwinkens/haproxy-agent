@@ -18,9 +18,6 @@
 #
 #
 #   some small modifications by b.von.st.vieth@fz-juelich.de
-
-# Note from 09.11.2023
-# Copy from nagios ramcheck for testing the agent. This is not meant for the public nor for production!
 #
 
 from sys import exit
