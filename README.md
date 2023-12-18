@@ -36,7 +36,7 @@ Note: The python dependencies are only comming from the buildins.
 
 ### Installer
 
-Just run `sudo ./install.sh` in the **root directory** of this repository.
+Just run `sudo ./install-service.sh` in the **root directory** of this repository.
 
 ### Install Manually
 
