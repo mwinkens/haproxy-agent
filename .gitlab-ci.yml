@@ -45,7 +45,7 @@ test:
         TEST_RESULT:
           - any
   script:
-    - apk add gcc build-base linux-headers
+    - apk add gcc build-base linux-headers git
     - git submodule update --init
     - pip install -r buildins/requirements.txt
     - python agent.py -host $HOST -p $PORT $TEST_SCRIPT &
