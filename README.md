@@ -18,6 +18,30 @@ This agent comes with buildin modules under `buildins`, which you need to initia
 git submodule update --init
 ```
 
+## Weighting
+
+The weights of the agent are configurable. In the following you can see the default values, but you may need to adjust this for your needs in the `haproxy-service.ini` configuration file. 
+
+### Load profile:
+
+![haproxy-agent-load](https://github.com/mwinkens/haproxy-agent/assets/104770531/8720df1c-667f-46f7-812d-906f937dc8b9)
+
+Notes:
+- Why is the minimum weight 1 and not 0? A high load shouldn't cause the instances to go into the drain state. The drain state is caused by a weight of 0 and an instance isn't allowing any new connections. If all your nodes experience a high load this might cause users to not find any available instances.
+- Why allow for more than 100% load? Because sometimes a service is just busy, calculating, installing updates and this shouldn't kick out the instance completly
+
+The number of new connections an instance will get is not only determined by its weight but also by the weight of all other instances.
+
+### Ram profile:
+
+![haproxy-agent-ram](https://github.com/mwinkens/haproxy-agent/assets/104770531/ad01ce98-94a6-4f10-81e9-b8d2395fc686)
+
+Notes:
+- Why do you have a threshold, where you set the weight to 0 and start draining the instance? Because 5% of the ram is reserved for a system administrator to intervene, check logs and be able to run commands. As soon as all of the ram is taken this will get significantly harder.
+
+### Combination:
+In order to combine all checks the minimum is taken. For example, if you instance is not high loaded, but has no ram left, it shouldn't allow new connections.
+
 ## Daemon installation
 
 This agent can be run as a daemon.
