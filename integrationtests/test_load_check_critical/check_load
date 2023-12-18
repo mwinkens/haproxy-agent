@@ -1,2 +1,0 @@
-#!/bin/sh
-echo "CRITICAL - load average: 1.20, 1.20, 1.20|load1=1.20; some_other_output"

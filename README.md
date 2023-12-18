@@ -1,88 +1,118 @@
-# Haproxy Nagios Agent
+# Haproxy Agent
 
-Simple agent for haproxy to gradually degrade a service if it's ram is reaching its limits
+Simple agent for haproxy to gradually degrade a service if it's ram or load is reaching its limits
 
 ## Getting started
+
 You can start this agent simply by calling
 
 ```commandline
-python agent.py -host <your host/localhost> -p <port> /path/to/nagiosramcheck.py
+python agent.py -host <your host/localhost> -p <port> /path/to/modules
 ```
 
-The path of the nagios ram check is usually given by puppet and may be different for different os
+This agent comes with buildin modules under `buildins`, which you need to initialize with
+
+```commandline
+git submodule update --init
+```
 
 ## Daemon installation
 
-This agent can be run as a daemon:
+This agent can be run as a daemon.
 
-For Ubuntu:
-- Clone this repository to `/opt/`
-- link the service file
+For Ubuntu (or other linux):
+
+### Packages
+
 ```commandline
-ln -s /opt/haproxy-nagios-agent/haproxy-nagios-agent.service /etc/systemd/system/haproxy-agent.service
+apt install gcc build-base linux-headers
+git submodule update --init
+pip install -r buildins/requirements.txt
 ```
+
+Note: The python dependencies are only comming from the buildins.
+
+### Installer
+
+Just run `sudo ./install.sh` in the **root directory** of this repository.
+
+### Install Manually
+
+- Edit the `haproxy-agent.service` file for your needs
+  - Adjust `WorkingDirectory` and `ExecStart`
+- link the service file with
+
+```commandline
+ln -s /path/to/haproxy-agent.service /etc/systemd/system/haproxy-agent.service
+```
+
 - reload the daemons with `systemctl daemon-reload`
 - start the agent with `systemctl start haproxy-agent`
 
-Additional Notes:
+Additional Notes for manual installation:
 
-If you want to install this repository at another place, you have to change the symlink and the `haproxy-nagios-agent.service` file!
+If you want to install this repository at another place, you have to change the symlink and
+the `haproxy-agent.service` file!
 
-Also, this agent starts with some default values defined in `start.sh`. The host defaults to `0.0.0.0`!
+This agent starts with the default buildins as defined in `start.sh`.
 
 ## Configure HAproxy
 
 According to this [guide](https://www.haproxy.com/blog/how-to-enable-health-checks-in-haproxy#agent-health-checks)
 you can simply add the agent-check configurations for haproxy:
+
 ```
 backend webservers
   balance roundrobin
-  server server1 192.168.50.2:443 check  weight 100  agent-check agent-inter 5s  agent-addr 192.168.50.2  agent-port 3000
+  server server1 192.168.123.123:443 check  weight 100  agent-check agent-inter 5s  agent-addr 192.168.123.123  agent-port 3000
 ```
 
 Note, that the agent-addr is the same as the servers address, as it runs on the server, but the agent port differs!
 
-Find more on the server configuration [in the official documentation](https://www.haproxy.com/documentation/aloha/latest/load-balancing/health-checks/agent-checks/#configure-the-servers)
+Find more for the server configuration [in the official documentation](https://www.haproxy.com/documentation/aloha/latest/load-balancing/health-checks/agent-checks/#configure-the-servers)
 
 ## Configure HAproxy-Agent
 
-The haproxy-agent comes with a variety of configuration options. These are all defined in `haproxy-agent.ini`. 
+The haproxy-agent comes with a variety of configuration options. These are all defined in `haproxy-agent.ini`.
 
 ### Start options
-The programm itself has just a few start options, where every argument except of the nagios path are optional:
+
+The program itself has just a few start options, where every argument except of the module path are optional.
+The agent comes with its own buildin modules, do you can use `buildins` for this.
 
 ```
-python3 agent.py -host 0.0.0.0 -p 3000 -c haproxy-agent.ini /lib/nagios/plugins
+python3 agent.py -host 0.0.0.0 -p 3000 -c haproxy-agent.ini buildins
 ```
 
 Note: The arguments directly given to the agent overwrite the haproxy-agent.ini file configuration!
 
 ### Variables
+
 Description of the variables in the haproxy-agent.ini file:
 
-| section | variable | default | description |
-| ------- | -------- | ------- | ----------- |
-| server  | host     | 0.0.0.0 | Binding host of the agent |
-|         | port     | 3000    | Binding port of the agent |
-| check.general | max_weight | 100 | Maximum weight the agent sends to the haproxy. This setting clips every other maximum weight! |
-|               | min_weight | 0 | Minimum weight the agent sends to the haproxy. This setting clips every other minimum weight! Set to 1 if you don't want to go into the drain state of haproxy ever! |
-| check.load | weight | 100 | Start weight of the load check for calculations |
-| | min_weight | 1 | Minimum weight the load check can return. The default is set to 1, so high loads don't cause every server to drain |
-| | max_weight | 100 | Maximum weight the load check can return
-| | degrading_threshold | 50 | Load percentage, at which stage 1 weight loss starts |
-| | degraded_weight | 50 | Start weight of stage 1 weight loss
-| | high_load_degraded_threshold | 90 | Load percentage, at which stage 2 weight loss starts |
-| | high_load_degraded_weight | 20 | Start weight of stage2 weight loss |
-| | fully_degraded_threshold | 110 | Load percentage at which the weight is 0. Please note, that check.general/min_weight and check.load/min_weight can clip the weight, so weight 0 might not be returned!
-| check.ram | weight | 100 | Start weight of the ram check for calculations |
-| | min_weight | 0 | Minimum weight the ram check can return. The default is set to 0, so high ram usage can cause servers to drain |
-| | degrading_threshold | 30 | Start degrading at 30% **free ram** left |
-| | degraded_weight | 50 | Start weight of ram weight loss |
-| | fully_degraded_threshold | 5 | **Free ram** percentage at which the weight is 0. Please note, that check.general/min_weight and check.ram/min_weight can clip the weight, so weight 0 might not be returned! |
+| section       | variable                     | default | description                                                                                                                                                                   |
+|---------------|------------------------------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| server        | host                         | 0.0.0.0 | Binding host of the agent                                                                                                                                                     |
+|               | port                         | 3000    | Binding port of the agent                                                                                                                                                     |
+| check.general | max_weight                   | 100     | Maximum weight the agent sends to the haproxy. This setting clips every other maximum weight!                                                                                 |
+|               | min_weight                   | 0       | Minimum weight the agent sends to the haproxy. This setting clips every other minimum weight! Set to 1 if you don't want to go into the drain state of haproxy ever!          |
+| check.load    | weight                       | 100     | Start weight of the load check for calculations                                                                                                                               |
+|               | min_weight                   | 1       | Minimum weight the load check can return. The default is set to 1, so high loads don't cause every server to drain                                                            |
+|               | max_weight                   | 100     | Maximum weight the load check can return                                                                                                                                      |
+|               | degrading_threshold          | 50      | Load percentage, at which stage 1 weight loss starts                                                                                                                          |
+|               | degraded_weight              | 50      | Start weight of stage 1 weight loss                                                                                                                                           |
+|               | high_load_degraded_threshold | 80      | Load percentage, at which stage 2 weight loss starts                                                                                                                          |
+|               | high_load_degraded_weight    | 20      | Start weight of stage2 weight loss                                                                                                                                            |
+|               | fully_degraded_threshold     | 120     | Load percentage at which the weight is 0. Please note, that check.general/min_weight and check.load/min_weight can clip the weight, so weight 0 might not be returned!        |
+| check.ram     | weight                       | 100     | Start weight of the ram check for calculations                                                                                                                                |
+|               | min_weight                   | 0       | Minimum weight the ram check can return. The default is set to 0, so high ram usage can cause servers to drain                                                                |
+|               | degrading_threshold          | 30      | Start degrading at 30% **free ram** left                                                                                                                                      |
+|               | degraded_weight              | 50      | Start weight of ram weight loss                                                                                                                                               |
+|               | fully_degraded_threshold     | 5       | **Free ram** percentage at which the weight is 0. Please note, that check.general/min_weight and check.ram/min_weight can clip the weight, so weight 0 might not be returned! |
 
-## Additional notes
+## License
 
-inspired by [haproxy-agent-check-example](https://github.com/haproxytechblog/haproxy-agent-check-example)
+See license file
 
 ## Author
 

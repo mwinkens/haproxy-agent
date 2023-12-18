@@ -1,0 +1,3 @@
+[submodule "haproxy-agent-buildins"]
+	path = buildins
+	url = https://github.com/mwinkens/haproxy-agent-buildins.git
