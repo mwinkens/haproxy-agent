@@ -1,13 +1,19 @@
 # Haproxy Agent
 
-Simple agent for haproxy to gradually degrade a service if it's ram is reaching its limits
+Simple agent for haproxy to gradually degrade a service if it's ram or load is reaching its limits
 
 ## Getting started
 
 You can start this agent simply by calling
 
 ```commandline
-python agent.py -host <your host/localhost> -p <port> /path/to/moduledir
+python agent.py -host <your host/localhost> -p <port> /path/to/modules
+```
+
+This agent comes with buildin modules under `buildins`, which you need to initialize with
+
+```commandline
+git submodule update --init
 ```
 
 ## Daemon installation
@@ -16,17 +22,28 @@ This agent can be run as a daemon.
 
 For Ubuntu (or other linux):
 
+### Packages
+
+```commandline
+apt install gcc build-base linux-headers
+git submodule update --init
+pip install -r buildins/requirements.txt
+```
+
+Note: The python dependencies are only comming from the buildins.
+
 ### Installer
 
 Just run `sudo ./install.sh` in the **root directory** of this repository.
 
-### Manually
+### Install Manually
 
-- Clone this repository to `/opt/`
+- Edit the `haproxy-agent.service` file for your needs
+  - Adjust `WorkingDirectory` and `ExecStart`
 - link the service file with
 
 ```commandline
-ln -s /opt/haproxy-agent/haproxy-agent.service /etc/systemd/system/haproxy-agent.service
+ln -s /path/to/haproxy-agent.service /etc/systemd/system/haproxy-agent.service
 ```
 
 - reload the daemons with `systemctl daemon-reload`
