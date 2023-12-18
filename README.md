@@ -1,4 +1,6 @@
 # Haproxy Agent
+[![Tests](https://github.com/mwinkens/haproxy-agent/actions/workflows/test.yaml/badge.svg?branch=main)](https://github.com/mwinkens/haproxy-agent/actions/workflows/test.yaml)
+[![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/mwinkens/haproxy-agent/issues)
 
 Simple agent for haproxy to gradually degrade a service if it's ram or load is reaching its limits
 
