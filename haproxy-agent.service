@@ -2,8 +2,8 @@
 Description=Haproxy-Agent for ram adjusted weights
 [Service]
 User=root
-WorkingDirectory=/opt/haproxy-agent
-ExecStart=/opt/haproxy-agent/start.sh
+WorkingDirectory=
+ExecStart=start.sh
 Type=simple
 TimeoutStopSec=10
 Restart=on-failure

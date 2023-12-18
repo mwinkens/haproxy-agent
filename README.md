@@ -12,12 +12,18 @@ python agent.py -host <your host/localhost> -p <port> /path/to/moduledir
 
 ## Daemon installation
 
-This agent can be run as a daemon:
+This agent can be run as a daemon.
 
-For Ubuntu:
+For Ubuntu (or other linux):
+
+### Installer
+
+Just run `sudo ./install.sh` in the **root directory** of this repository.
+
+### Manually
 
 - Clone this repository to `/opt/`
-- link the service file
+- link the service file with
 
 ```commandline
 ln -s /opt/haproxy-agent/haproxy-agent.service /etc/systemd/system/haproxy-agent.service
@@ -26,12 +32,12 @@ ln -s /opt/haproxy-agent/haproxy-agent.service /etc/systemd/system/haproxy-agent
 - reload the daemons with `systemctl daemon-reload`
 - start the agent with `systemctl start haproxy-agent`
 
-Additional Notes:
+Additional Notes for manual installation:
 
 If you want to install this repository at another place, you have to change the symlink and
 the `haproxy-agent.service` file!
 
-Also, this agent starts with some default values defined in `start.sh`. The host defaults to `0.0.0.0`!
+This agent starts with the default buildins as defined in `start.sh`.
 
 ## Configure HAproxy
 
@@ -41,13 +47,12 @@ you can simply add the agent-check configurations for haproxy:
 ```
 backend webservers
   balance roundrobin
-  server server1 192.168.50.2:443 check  weight 100  agent-check agent-inter 5s  agent-addr 192.168.50.2  agent-port 3000
+  server server1 192.168.123.123:443 check  weight 100  agent-check agent-inter 5s  agent-addr 192.168.123.123  agent-port 3000
 ```
 
 Note, that the agent-addr is the same as the servers address, as it runs on the server, but the agent port differs!
 
-Find more on the server
-configuration [in the official documentation](https://www.haproxy.com/documentation/aloha/latest/load-balancing/health-checks/agent-checks/#configure-the-servers)
+Find more for the server configuration [in the official documentation](https://www.haproxy.com/documentation/aloha/latest/load-balancing/health-checks/agent-checks/#configure-the-servers)
 
 ## Configure HAproxy-Agent
 
