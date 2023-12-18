@@ -71,3 +71,8 @@ jobs:
           else
             exit 1
           fi
+      - name: Install as service
+        if: ${{ matrix.test_case.TEST_RESULT == 'any' }}
+        run: |
+          sudo install-service.sh
+          systemctl is-active --quiet haproxy-agent
