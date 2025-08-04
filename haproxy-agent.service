@@ -4,6 +4,7 @@ Description=Haproxy-Agent for ram adjusted weights
 User=root
 WorkingDirectory=
 ExecStart=start.sh
+EnvironmentFile=haproxy-agent.conf
 Type=simple
 TimeoutStopSec=10
 Restart=on-failure

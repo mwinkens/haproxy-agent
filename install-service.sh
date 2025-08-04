@@ -3,6 +3,8 @@
 service_file="haproxy-agent.service"
 key_start="ExecStart"
 new_exec_start_value="$(pwd)/start.sh"
+key_env="EnvironmentFile"
+new_env_key_value="$(pwd)/haproxy-agent.conf"
 key_working="WorkingDirectory"
 new_working_value="$(pwd)"
 
@@ -11,6 +13,7 @@ if [ -f "$service_file" ]; then
     # Edit the specified key in the [Service] section
     sed -i "s|\($key_start *= *\).*|\1$new_exec_start_value|" "$service_file"
     sed -i "s|\($key_working *= *\).*|\1$new_working_value|" "$service_file"
+    sed -i "s|\($key_env *= *\).*|\1$new_env_key_value|" "$service_file"
 
     echo "Service file updated successfully."
 
